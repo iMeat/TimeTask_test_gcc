@@ -46,7 +46,7 @@ timeTaskNr_t TimeTask_SearchNextIndexByTime(timeTask_t *timeTaskList, uint8_t si
 timeTaskNr_t TimeTask_Add(uint32_t time, FunctionCallback_t functionCallback);
 uint8_t TimeTask_ListClear(void);
 uint8_t TimeTask_DelByNr(timeTaskNr_t timeTaskNr);
-
+uint8_t TimeTask_DelByTime(uint32_t time);
 //
 
 int main(void)
@@ -139,7 +139,8 @@ void PrintMenu(void)
   printf("MENU:\r\n");
   printf("1 - TimeTask_Add()\r\n");
   printf("2 - TimeTask_ListClear()\r\n");
-  printf("3 - TimeTask_DelByNr()\r\n");     
+  printf("3 - TimeTask_DelByNr()\r\n");
+  printf("4 - TimeTask_DelByTime()\r\n");
   printf("E - exit\r\n");
   printf("===============================================\r\n"); 
 }
@@ -153,60 +154,86 @@ uint8_t menuParser(void)
   {
   //============   
   case '1':
-  printf("TimeTask_Add()\r\n");
-  uint32_t time = 0;
-  FunctionCallback_t *cb = NULL;
-  while(time == 0)
   {
-    printf("Enter time valie:\r\n");
-    scanf("%u", &time);
-    if(time > SLOT_DURATION_TIME)
+    printf("TimeTask_Add()\r\n");
+    uint32_t time = 0;
+    FunctionCallback_t *cb = NULL;
+    while(time == 0)
     {
-      time = 0;
-      printf("Invalid time valie!\r\n");  
-    } 
+      printf("Enter time valie:\r\n");
+      scanf("%u", &time);
+      if(time > SLOT_DURATION_TIME)
+      {
+        time = 0;
+        printf("Invalid time valie!\r\n");  
+      } 
+    }
+    uint8_t status = TimeTask_Add(time, &PrintMenu);
+    if(status == TIME_TASK_ERROR)
+    {
+      printf("TimeTask_Add() return ERROR\r\n");  
+    }
+    else 
+    {
+      printf("TimeTask_Add() retrun code %03d\r\n",status);  
+    }
+    return NO_EXIT_VALUE;     
+    break;
   }
-uint8_t status = TimeTask_Add(time, &PrintMenu);
-if(status == TIME_TASK_ERROR)
-{
-printf("TimeTask_Add() return ERROR\r\n");  
-}
-else
-{
-  printf("TimeTask_Add() retrun code %03d\r\n",status);  
-}
-
-  return NO_EXIT_VALUE;     
-  break;
   //============
   case '2':
-  TimeTask_ListClear();
-  break;
+  {
+    TimeTask_ListClear();
+    break;
+  }
   //============  
   case '3':
   {
-  uint8_t taskNumber = 0;
-  uint8_t status = 0;
-  printf("Enter Task number valie: \r\n");
-  scanf("%u", &taskNumber);
-  status = TimeTask_DelByNr(taskNumber);
-  if(status == TIME_TASK_ERROR)
-  {
-   printf("TimeTask_DelByNr() return ERROR\r\n"); 
-  }
-  else
-  {
-   printf("TimeTask_DelByNr() return %03d\r\n", status);  
-  }
-  break;
-  //============
+    uint8_t taskNumber = 0;
+    uint8_t status = 0;
+    printf("Enter Task number valie: \r\n");
+    scanf("%u", &taskNumber);
+    status = TimeTask_DelByNr(taskNumber);
+    if(status == TIME_TASK_ERROR)
+    {
+      printf("TimeTask_DelByNr() return ERROR\r\n"); 
+    }
+    else
+    {
+      printf("TimeTask_DelByNr() return %03d\r\n", status);  
+    }
+    break;
   } 
+  //============
+  case '4':
+  {
+    uint32_t time = 0;
+    uint8_t status = 0;
+    printf("Enter time valie: \r\n");
+    scanf("%u", &time);
+    status = TimeTask_DelByTime(time);
+    if(status == TIME_TASK_ERROR)
+    {
+      printf("TimeTask_DelByTime() return ERROR\r\n"); 
+    }
+    else
+    {
+      printf("TimeTask_DelByTime() return %03d\r\n", status);  
+    }  
+    break;
+  }
+  //============ 
   case 'E':
-  return EXIT_VALUE;
+  {
+    return EXIT_VALUE;
+  }
   //============ 
   default:
+  {
   printf("Invalid letter value!\r\n");
   return NO_EXIT_VALUE;
+  }
+  //============ 
   }
   
 }
@@ -371,9 +398,9 @@ uint8_t TimeTask_ListClear(void)
 	return 0;
 }
 //==========================================================================
-/*Delite task by number by shifting all lefter indexes
+/* Delete task by number by shifting all left elements
  * IN: timeTaskNr_t timeTaskNr - 0...254
- * OUT: uint
+ * OUT: uint8_t - index of deleted task number
 */
 uint8_t TimeTask_DelByNr(timeTaskNr_t timeTaskNr)
 {
@@ -382,12 +409,39 @@ uint8_t TimeTask_DelByNr(timeTaskNr_t timeTaskNr)
   {
     return TIME_TASK_ERROR;
   }
-  //left shift from timeTaskCounter index to timeTaskNr index
+  //delete element by left shift from timeTaskCounter index to timeTaskNr index
 	for(uint8_t i = timeTaskNr; i < timeTaskCounter; i++)
+	{
+		timeTaskList[i] = timeTaskList[i+1];
+	}
+	timeTaskCounter--;
+	return timeTaskNr;//ok
+}
+//==========================================================================
+/* Delete task by time by shifting all left elements
+ * IN: timeTaskNr_t timeTaskNr - 0...254
+ * OUT: uint8_t - index of deleted task number
+*/
+uint8_t TimeTask_DelByTime(uint32_t time)
+{
+  //check time value
+  if(time > SLOT_DURATION_TIME)
+  {
+    return TIME_TASK_ERROR;
+  }
+  uint8_t indexByTime = TimeTask_SearchByTime(timeTaskList, timeTaskCounter, time);
+  //no such time index
+  if(indexByTime == TIME_TASK_ERROR)
+  {
+    return TIME_TASK_ERROR;
+  }
+  //delete element by left shift from timeTaskCounter index to time index
+	for(uint8_t i = indexByTime; i < timeTaskCounter; i++)
 	{
 		timeTaskList[i] = timeTaskList[i+1];
 	}
 	timeTaskCounter--;
 	return 0;//ok
 }
+
 //==========================================================================
