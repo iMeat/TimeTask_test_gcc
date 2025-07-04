@@ -137,7 +137,7 @@ void PrintMenu(void)
 {
   printf("MENU:\r\n");
   printf("A - add task\r\n");
-  printf("D - delite all tasks\r\n");   
+  printf("C - clear timeTaskList\r\n");   
   printf("E - exit\r\n");
   printf("===============================================\r\n"); 
 }
@@ -165,12 +165,20 @@ uint8_t menuParser(void)
     } 
   }
 uint8_t status = TimeTask_Add(time, &PrintMenu);
-printf("TimeTask_Add() retrun code %03d\r\n",status);   
+if(status == TIME_TASK_ERROR)
+{
+printf("TimeTask_Add() return ERROR code\r\n");  
+}
+else
+{
+  printf("TimeTask_Add() retrun code %03d\r\n",status);  
+}
+
   return NO_EXIT_VALUE;     
   break;
   //============
-  case D:
-
+  case 'C':
+  TimeTask_ListClear();
   break;
   //============  
   case 'E':
@@ -310,9 +318,14 @@ timeTaskNr_t TimeTask_Add(uint32_t time, FunctionCallback_t functionCallback)
 	//search next time index
 	uint8_t i = TimeTask_SearchNextIndexByTime(timeTaskList, timeTaskCounter, time);
   printf("TimeTask_SearchNextIndexByTime() return code %03d\r\n", i);
-  if(i == 255)
+  if(i == TIME_TASK_ERROR)
   {
-    return 255;
+    return TIME_TASK_ERROR;
+  }
+  //check time
+  if(timeTaskList[i].time == time)
+  {
+    return TIME_TASK_ERROR;
   }
 	//shift right tasks
   	timeTaskCounter++;
