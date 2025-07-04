@@ -9,10 +9,10 @@
 
 #define TEST_TimeTask_SearchByTime          0
 #define TEST_TimeTask_SearchNextIndexByTime 0
-#define TEST_TimeTask_Add                   1
+#define TEST_Other_tests                   1
 
 
-#if TEST_TimeTask_SearchByTime == 1 || TEST_TimeTask_SearchNextIndexByTime == 1 || TEST_TimeTask_Add == 1
+#if TEST_TimeTask_SearchByTime == 1 || TEST_TimeTask_SearchNextIndexByTime == 1 || TEST_Other_tests == 1
 #define ARRAY_STEP 50
 #endif//TEST_TimeTask_SearchByTime == 1 || TEST_TimeTask_SearchNextIndexByTime == 1
 
@@ -44,7 +44,7 @@ uint8_t menuParser(void);
 timeTaskNr_t TimeTask_SearchByTime(timeTask_t *timeTaskList, uint8_t size, uint32_t time);
 timeTaskNr_t TimeTask_SearchNextIndexByTime(timeTask_t *timeTaskList, uint8_t size, uint32_t time);
 timeTaskNr_t TimeTask_Add(uint32_t time, FunctionCallback_t functionCallback);
-
+uint8_t TimeTask_ListClear(void);
 
 //
 
@@ -94,7 +94,7 @@ int main(void)
   }
 #endif //TEST_TimeTask_SearchNextIndexByTime
 
-#if TEST_TimeTask_Add == 1
+#if TEST_Other_tests == 1
   while(isExit != EXIT_VALUE)
     {
       PrintTimeTaskList(TIME_TASK_LIST_SIZE);      
@@ -103,7 +103,7 @@ int main(void)
     }
     return 0;
 }
-#endif //TEST_TimeTask_Add == 1
+#endif //TEST_Other_tests == 1
 
 
 //==========================================================================
@@ -136,7 +136,8 @@ void PrintTimeTaskList(uint8_t size)
 void PrintMenu(void)
 {
   printf("MENU:\r\n");
-  printf("A - add task\r\n"); 
+  printf("A - add task\r\n");
+  printf("D - delite all tasks\r\n");   
   printf("E - exit\r\n");
   printf("===============================================\r\n"); 
 }
@@ -163,21 +164,15 @@ uint8_t menuParser(void)
       printf("Invalid time valie!\r\n");  
     } 
   }
-//   while(cb == NULL)
-//   {
-//     printf("Enter Callback Value:\r\n");  
-//     scanf("%u", cb);
-// if(cb == NULL)
-//     {
-//     printf("Invalid Callback valie!\r\n");  
-//     }
-//   }
-
 uint8_t status = TimeTask_Add(time, &PrintMenu);
 printf("TimeTask_Add() retrun code %03d\r\n",status);   
   return NO_EXIT_VALUE;     
   break;
   //============
+  case D:
+
+  break;
+  //============  
   case 'E':
   return EXIT_VALUE;
   //============ 
@@ -288,7 +283,6 @@ timeTaskNr_t TimeTask_SearchNextIndexByTime(timeTask_t *timeTaskList, uint8_t si
 }
 
 //==========================================================================
-
 /* Add task to the end of TimeTask array
  * IN: uint32_t time - time: (0 ... SLOT_DURATION_TIME) in us
  * IN: FunctionCallback_t FunctionCallback - function that will be callbacked when time elapsed
@@ -332,4 +326,15 @@ timeTaskNr_t TimeTask_Add(uint32_t time, FunctionCallback_t functionCallback)
 	return timeTaskCounter;
 }
 //==========================================================================
-
+uint8_t TimeTask_ListClear(void)
+{
+	for(uint8_t i = 0;i < timeTaskCounter; i++)
+	{
+		timeTaskList[i].time = 0;
+//		timeTaskList[i].FunctionCallback = NULL;
+//		timeTaskList[i].isActive = 0;
+	}
+	timeTaskCounter = 0;
+	return 0;
+}
+//==========================================================================
